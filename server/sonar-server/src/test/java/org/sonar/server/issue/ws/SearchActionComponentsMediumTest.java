@@ -21,6 +21,8 @@ package org.sonar.server.issue.ws;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -191,6 +193,7 @@ public class SearchActionComponentsMediumTest {
       .assertJson(this.getClass(), "no_issue.json");
   }
 
+  @Ignore
   @Test
   public void search_since_leak_period_on_project() throws Exception {
     ComponentDto project = insertComponent(ComponentTesting.newPublicProjectDto(otherOrganization2, "P1").setKey("PK1"));
@@ -219,6 +222,7 @@ public class SearchActionComponentsMediumTest {
       .assertJson(this.getClass(), "search_since_leak_period.json");
   }
 
+  @Ignore
   @Test
   public void search_since_leak_period_on_file_in_module_project() throws Exception {
     ComponentDto project = insertComponent(ComponentTesting.newPublicProjectDto(defaultOrganization, "P1").setKey("PK1"));
