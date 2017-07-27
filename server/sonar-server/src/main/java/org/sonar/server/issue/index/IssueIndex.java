@@ -681,11 +681,11 @@ public class IssueIndex {
     });
     SearchResponse response = request.get();
     return response.getAggregations().asList().stream().flatMap(projectBucket -> {
-      long count = ((InternalValueCount) projectBucket.getProperty(projectBucket.getName() + "_count")).getValue();
+      long count = ((InternalValueCount) projectBucket.getMetaData().get(projectBucket.getName() + "_count")).getValue();
       if (count < 1L) {
         return Stream.empty();
       }
-      long lastIssueDate = (long) ((InternalMax) projectBucket.getProperty(projectBucket.getName() + "_maxFuncCreatedAt")).getValue();
+      long lastIssueDate = (long) ((InternalMax) projectBucket.getMetaData().get(projectBucket.getName() + "_maxFuncCreatedAt")).getValue();
       return Stream.of(new ProjectStatistics(projectBucket.getName(), count, lastIssueDate));
     }).collect(MoreCollectors.toList(projectUuids.size()));
   }
