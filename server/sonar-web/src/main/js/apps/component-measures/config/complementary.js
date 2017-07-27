@@ -18,23 +18,21 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 // @flow
+export const complementary = {
+  coverage: ['uncovered_lines', 'uncovered_conditions'],
+  line_coverage: ['uncovered_lines'],
+  branch_coverage: ['uncovered_conditions'],
+  uncovered_lines: ['line_coverage'],
+  uncovered_conditions: ['branch_coverage'],
 
-export type Metric = {
-  custom?: boolean,
-  decimalScale?: number,
-  description?: string,
-  direction?: number,
-  domain?: string,
-  hidden?: boolean,
-  key: string,
-  name: string,
-  qualitative?: boolean,
-  type: string
+  new_coverage: ['new_uncovered_lines', 'new_uncovered_conditions'],
+  new_line_coverage: ['new_uncovered_lines'],
+  new_branch_coverage: ['new_uncovered_conditions'],
+  new_uncovered_lines: ['new_line_coverage'],
+  new_uncovered_conditions: ['new_branch_coverage'],
+
+  duplicated_lines_density: ['duplicated_lines'],
+  new_duplicated_lines_density: ['new_duplicated_lines'],
+  duplicated_lines: ['duplicated_lines_density'],
+  new_duplicated_lines: ['new_duplicated_lines_density']
 };
-
-export const RECEIVE_METRICS = 'RECEIVE_METRICS';
-
-export const receiveMetrics = (metrics: Array<Metric>) => ({
-  type: RECEIVE_METRICS,
-  metrics
-});

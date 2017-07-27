@@ -18,23 +18,15 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 // @flow
+import React from 'react';
+import { translate } from '../../../helpers/l10n';
 
-export type Metric = {
-  custom?: boolean,
-  decimalScale?: number,
-  description?: string,
-  direction?: number,
-  domain?: string,
-  hidden?: boolean,
-  key: string,
-  name: string,
-  qualitative?: boolean,
-  type: string
-};
-
-export const RECEIVE_METRICS = 'RECEIVE_METRICS';
-
-export const receiveMetrics = (metrics: Array<Metric>) => ({
-  type: RECEIVE_METRICS,
-  metrics
-});
+export default function MetricNotFound({ className }: { className?: string }) {
+  return (
+    <div className={className}>
+      <div className="alert alert-danger">
+        {translate('component_measures.not_found')}
+      </div>
+    </div>
+  );
+}

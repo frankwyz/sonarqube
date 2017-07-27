@@ -18,23 +18,22 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 // @flow
+import React from 'react';
+import Measure from '../../../../components/measure/Measure';
+import type { Component } from '../../types';
+import type { Metric } from '../../../../store/metrics/actions';
 
-export type Metric = {
-  custom?: boolean,
-  decimalScale?: number,
-  description?: string,
-  direction?: number,
-  domain?: string,
-  hidden?: boolean,
-  key: string,
-  name: string,
-  qualitative?: boolean,
-  type: string
+type Props = {
+  component: Component,
+  metric: Metric
 };
 
-export const RECEIVE_METRICS = 'RECEIVE_METRICS';
-
-export const receiveMetrics = (metrics: Array<Metric>) => ({
-  type: RECEIVE_METRICS,
-  metrics
-});
+export default function MeasureCell({ component, metric }: Props) {
+  return (
+    <td className="thin nowrap text-right">
+      <span id={'component-measures-component-measure-' + component.key + '-' + metric.key}>
+        <Measure measure={{ metric, value: component.value, leak: component.leak }} />
+      </span>
+    </td>
+  );
+}

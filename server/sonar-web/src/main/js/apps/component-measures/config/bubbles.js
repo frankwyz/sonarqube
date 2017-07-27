@@ -18,23 +18,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 // @flow
-
-export type Metric = {
-  custom?: boolean,
-  decimalScale?: number,
-  description?: string,
-  direction?: number,
-  domain?: string,
-  hidden?: boolean,
-  key: string,
-  name: string,
-  qualitative?: boolean,
-  type: string
+export const bubbles = {
+  Reliability: { x: 'ncloc', y: 'reliability_remediation_effort', size: 'bugs' },
+  Security: { x: 'ncloc', y: 'security_remediation_effort', size: 'vulnerabilities' },
+  Maintainability: { x: 'ncloc', y: 'sqale_index', size: 'code_smells' },
+  Coverage: { x: 'complexity', y: 'coverage', size: 'uncovered_lines' },
+  Duplications: { x: 'ncloc', y: 'duplicated_lines', size: 'duplicated_blocks' }
 };
-
-export const RECEIVE_METRICS = 'RECEIVE_METRICS';
-
-export const receiveMetrics = (metrics: Array<Metric>) => ({
-  type: RECEIVE_METRICS,
-  metrics
-});

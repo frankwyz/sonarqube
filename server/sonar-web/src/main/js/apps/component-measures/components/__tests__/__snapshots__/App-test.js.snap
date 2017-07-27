@@ -51,11 +51,9 @@ exports[`should render correctly 1`] = `
         </div>
       </div>
     </div>
-    <div
+    <MetricNotFound
       className="layout-page-main-inner"
-    >
-      Main
-    </div>
+    />
   </div>
 </div>
 `;

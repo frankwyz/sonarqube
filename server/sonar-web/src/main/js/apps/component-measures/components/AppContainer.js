@@ -22,17 +22,23 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import App from './App';
 import throwGlobalError from '../../../app/utils/throwGlobalError';
-import { getComponent, getMetrics, getMetricByKey } from '../../../store/rootReducer';
+import {
+  getComponent,
+  getMetrics,
+  getMetricByKey,
+  getMetricsKey
+} from '../../../store/rootReducer';
 import { fetchMetrics } from '../../../store/rootActions';
 import { getMeasuresAndMeta } from '../../../api/measures';
+import { getLeakPeriod } from '../../../helpers/periods';
 import { getLeakValue } from '../utils';
-import type { Component } from '../types';
-import type { Metrics } from '../../../store/metrics/actions';
+import type { Component, Period } from '../types';
 import type { Measure, MeasureEnhanced } from '../../../components/measure/types';
 
 const mapStateToProps = (state, ownProps) => ({
   component: getComponent(state, ownProps.location.query.id),
-  metrics: getMetrics(state)
+  metrics: getMetrics(state),
+  metricsKey: getMetricsKey(state)
 });
 
 const banQualityGate = (component: Component, measures: Array<Measure>): Array<Measure> => {
@@ -49,36 +55,28 @@ const banQualityGate = (component: Component, measures: Array<Measure>): Array<M
   return newMeasures;
 };
 
-const fetchMeasures = (component: Component, metrics: Metrics) => (
+const fetchMeasures = (component: Component, metrics: Array<string>) => (
   dispatch,
   getState
-): Promise<Array<MeasureEnhanced>> => {
-  const metricKeys = metrics.filter(key => {
-    const metric = getMetricByKey(getState(), key);
-    return !metric.hidden && !['DATA', 'DISTRIB'].includes(metric.type);
-  });
-
-  if (metricKeys.length <= 0) {
-    return Promise.resolve([]);
+): Promise<{ measures: Array<MeasureEnhanced>, leakPeriod: ?Period }> => {
+  if (metrics.length <= 0) {
+    return Promise.resolve({ measures: [], leakPeriod: null });
   }
 
-  return getMeasuresAndMeta(component.key, metricKeys, { additionalFields: 'periods' }).then(r => {
-    const measures: Array<MeasureEnhanced> = banQualityGate(component, r.component.measures)
-      .map(measure => {
-        const metric = getMetricByKey(getState(), measure.metric);
-        const leak = getLeakValue(measure);
-        return { value: measure.value, periods: measure.periods, metric, leak };
-      })
-      .filter(measure => {
-        const hasValue = measure.value != null;
-        const hasLeakValue = measure.leak != null;
-        return hasValue || hasLeakValue;
-      });
+  return getMeasuresAndMeta(component.key, metrics, { additionalFields: 'periods' }).then(r => {
+    const measures: Array<MeasureEnhanced> = banQualityGate(
+      component,
+      r.component.measures
+    ).map(measure => {
+      const metric = getMetricByKey(getState(), measure.metric);
+      const leak = getLeakValue(measure);
+      return { value: measure.value, periods: measure.periods, metric, leak };
+    });
 
     const newBugs = measures.find(measure => measure.metric.key === 'new_bugs');
     const applicationPeriods = newBugs ? [{ index: 1 }] : [];
     const periods = component.qualifier === 'APP' ? applicationPeriods : r.periods;
-    return { measures, periods };
+    return { measures, leakPeriod: getLeakPeriod(periods) };
   }, throwGlobalError);
 };
 

@@ -20,12 +20,14 @@
 // @flow
 import React from 'react';
 import Helmet from 'react-helmet';
+import MeasureContent from './MeasureContent';
+import MetricNotFound from './MetricNotFound';
 import Sidebar from '../sidebar/Sidebar';
 import { parseQuery, serializeQuery } from '../utils';
 import { translate } from '../../../helpers/l10n';
 import type { Component, Query, Period } from '../types';
 import type { RawQuery } from '../../../helpers/query';
-import type { Metrics } from '../../../store/metrics/actions';
+import type { Metric } from '../../../store/metrics/actions';
 import type { MeasureEnhanced } from '../../../components/measure/types';
 import '../style.css';
 
@@ -34,10 +36,11 @@ type Props = {|
   location: { pathname: string, query: RawQuery },
   fetchMeasures: (
     Component,
-    Metrics
-  ) => Promise<{ measures: Array<MeasureEnhanced>, periods: Array<Period> }>,
+    Array<string>
+  ) => Promise<{ measures: Array<MeasureEnhanced>, leakPeriod: ?Period }>,
   fetchMetrics: () => void,
-  metrics: Metrics,
+  metrics: { [string]: Metric },
+  metricsKey: Array<string>,
   router: {
     push: ({ pathname: string, query?: RawQuery }) => void
   }
@@ -46,7 +49,7 @@ type Props = {|
 type State = {|
   loading: boolean,
   measures: Array<MeasureEnhanced>,
-  periods: Array<Period>
+  leakPeriod: ?Period
 |};
 
 export default class App extends React.PureComponent {
@@ -59,7 +62,7 @@ export default class App extends React.PureComponent {
     this.state = {
       loading: true,
       measures: [],
-      periods: []
+      leakPeriod: null
     };
   }
 
@@ -83,16 +86,28 @@ export default class App extends React.PureComponent {
     }
   }
 
-  fetchMeasures = ({ component, fetchMeasures, metrics }: Props) => {
+  componentWillUnmount() {
+    this.mounted = false;
+    const footer = document.getElementById('footer');
+    if (footer) {
+      footer.classList.remove('search-navigator-footer');
+    }
+  }
+
+  fetchMeasures = ({ component, fetchMeasures, metrics, metricsKey }: Props) => {
     this.setState({ loading: true });
-    fetchMeasures(component, metrics).then(
-      ({ measures, periods }) => {
-        if (this.mounted) {
-          this.setState({ loading: false, measures, periods });
-        }
-      },
-      () => this.setState({ loading: false })
+    const filterdKeys = metricsKey.filter(
+      key => !metrics[key].hidden && !['DATA', 'DISTRIB'].includes(metrics[key].type)
     );
+    fetchMeasures(component, filterdKeys).then(({ measures, leakPeriod }) => {
+      if (this.mounted) {
+        this.setState({
+          loading: false,
+          leakPeriod,
+          measures: measures.filter(measure => measure.value != null || measure.leak != null)
+        });
+      }
+    }, () => this.mounted && this.setState({ loading: false }));
   };
 
   updateQuery = (newQuery: Query) => {
@@ -110,10 +125,12 @@ export default class App extends React.PureComponent {
   };
 
   render() {
-    if (this.state.loading) {
+    const isLoading = this.state.loading || this.props.metricsKey.length <= 0;
+    if (isLoading) {
       return <i className="spinner spinner-margin" />;
     }
     const query = parseQuery(this.props.location.query);
+    const metric = this.props.metrics[query.metric];
     return (
       <div className="layout-page" id="component-measures">
         <Helmet title={translate('layout.measures')} />
@@ -139,7 +156,15 @@ export default class App extends React.PureComponent {
             </div>
           </div>
 
-          <div className="layout-page-main-inner">Main</div>
+          {metric != null
+            ? <MeasureContent
+                className="layout-page-main-inner"
+                component={this.props.component}
+                fetchMeasures={this.props.fetchMeasures}
+                leakPeriod={this.state.leakPeriod}
+                metric={metric}
+              />
+            : <MetricNotFound className="layout-page-main-inner" />}
         </div>
       </div>
     );
